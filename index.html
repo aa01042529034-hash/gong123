@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>영어 단어 학습 게임</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f3f4f6;
+    }
+
+    .game-wrapper {
+      width: 100%;
+      max-width: 480px;
+      padding: 20px;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 18px;
+      padding: 24px 20px 20px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .title {
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .badge {
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #eef2ff;
+      color: #4f46e5;
+      font-weight: 600;
+    }
+
+    .status-bar {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      font-size: 13px;
+      color: #4b5563;
+    }
+
+    .status-bar span strong {
+      font-weight: 700;
+      color: #111827;
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 6px;
+      background: #e5e7eb;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, #4f46e5, #6366f1);
+      transition: width 0.3s ease;
+    }
+
+    .question-box {
+      background: #f9fafb;
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 18px;
+    }
+
+    .question-label {
+      font-size: 12px;
+      color: #6b7280;
+      margin-bottom: 4px;
+    }
+
+    .question-text {
+      font-size: 22px;
+      font-weight: 700;
+      color: #111827;
+    }
+
+    .hint-text {
+      margin-top: 6px;
+      font-size: 12px;
+      color: #9ca3af;
+    }
+
+    .choices {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .choice-btn {
+      width: 100%;
+      padding: 11px 12px;
+      border-radius: 999px;
+      border: 1px solid #e5e7eb;
+      background: #ffffff;
+      text-align: left;
+      font-size: 15px;
+      cursor: pointer;
+      transition: transform 0.08s ease, box-shadow 0.08s ease, border-color 0.1s ease, background 0.1s ease;
+    }
+
+    .choice-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05);
+    }
+
+    .choice-btn.correct {
+      background: #dcfce7;
+      border-color: #34d399;
+    }
+
+    .choice-btn.wrong {
+      background: #fee2e2;
+      border-color: #f97373;
+    }
+
+    .bottom-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 4px;
+    }
+
+    .message {
+      font-size: 14px;
+      min-height: 18px;
+    }
+
+    .message.correct {
+      color: #16a34a;
+    }
+
+    .message.wrong {
+      color: #dc2626;
+    }
+
+    .primary-btn {
+      border: none;
+      border-radius: 999px;
+      padding: 9px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      background: #4f46e5;
+      color: white;
+      box-shadow: 0 6px 16px rgba(79, 70, 229, 0.35);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.1s ease;
+    }
+
+    .primary-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 20px rgba(79, 70, 229, 0.4);
+      background: #4338ca;
+    }
+
+    .primary-btn:disabled {
+      opacity: 0.5;
+      cursor: default;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .small-text {
+      margin-top: 8px;
+      font-size: 11px;
+      color: #9ca3af;
+      text-align: right;
+    }
+
+    .game-over {
+      text-align: center;
+      margin-top: 10px;
+      font-size: 14px;
+      color: #374151;
+    }
+
+    .game-over strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 16px;
+    }
+
+    @media (min-width: 640px) {
+      .card {
+        padding: 26px 24px 22px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="game-wrapper">
+    <div class="card">
+      <div class="card-header">
+        <div class="title">영어 단어 퀴즈</div>
+        <div class="badge">기본 레벨</div>
+      </div>
+
+      <div class="status-bar">
+        <span>점수: <strong id="score">0</strong></span>
+        <span>문제: <strong id="questionCount">0</strong></span>
+        <span>기회: <strong id="lives">3</strong></span>
+      </div>
+
+      <div class="progress-track">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+
+      <div class="question-box">
+        <div class="question-label">다음 뜻에 해당하는 영어 단어는?</div>
+        <div class="question-text" id="koreanMeaning">시작하기 버튼을 눌러주세요</div>
+        <div class="hint-text" id="hintText"></div>
+      </div>
+
+      <div class="choices" id="choices">
+        <!-- 선택지가 JS로 생성됨 -->
+      </div>
+
+      <div class="bottom-bar">
+        <div class="message" id="message"></div>
+        <button class="primary-btn" id="nextBtn">
+          <span id="nextBtnText">시작하기</span>
+        </button>
+      </div>
+
+      <div class="game-over" id="gameOver" style="display: none;">
+        <strong>게임 종료!</strong>
+        <span id="finalScoreText"></span><br />
+        다시 시작하려면 &quot;다음 문제&quot; 버튼을 누르세요.
+      </div>
+
+      <div class="small-text">
+        단어 리스트는 코드 맨 아래에서 직접 수정할 수 있어요.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ---- 1. 단어 데이터 ----
+    // 필요에 따라 단어를 추가/수정하면 됨
+    const WORDS = [
+      { en: "apple", ko: "사과", hint: "과일" },
+      { en: "book", ko: "책", hint: "읽는 것" },
+      { en: "teacher", ko: "선생님", hint: "학교 사람" },
+      { en: "student", ko: "학생", hint: "공부하는 사람" },
+      { en: "computer", ko: "컴퓨터", hint: "전자 기기" },
+      { en: "window", ko: "창문", hint: "빛이 들어오는 곳" },
+      { en: "music", ko: "음악", hint: "듣는 예술" },
+      { en: "family", ko: "가족", hint: "가장 가까운 사람들" },
+      { en: "water", ko: "물", hint: "마시는 것" },
+      { en: "city", ko: "도시", hint: "많은 사람이 사는 곳" },
+      { en: "movie", ko: "영화", hint: "스크린에서 보는 이야기" },
+      { en: "friend", ko: "친구", hint: "함께 노는 사람" },
+      { en: "homework", ko: "숙제", hint: "집에서 하는 공부" },
+      { en: "coffee", ko: "커피", hint: "어른들이 자주 마시는 음료" },
+      { en: "morning", ko: "아침", hint: "하루의 시작" },
+    ];
+
+    // ---- 2. DOM 요소 가져오기 ----
+    const koreanMeaningEl = document.getElementById("koreanMeaning");
+    const hintTextEl = document.getElementById("hintText");
+    const choicesEl = document.getElementById("choices");
+    const messageEl = document.getElementById("message");
+    const scoreEl = document.getElementById("score");
+    const livesEl = document.getElementById("lives");
+    const questionCountEl = document.getElementById("questionCount");
+    const nextBtn = document.getElementById("nextBtn");
+    const nextBtnText = document.getElementById("nextBtnText");
+    const gameOverEl = document.getElementById("gameOver");
+    const finalScoreTextEl = document.getElementById("finalScoreText");
+    const progressFillEl = document.getElementById("progressFill");
+
+    // ---- 3. 게임 상태 ----
+    let score = 0;
+    let lives = 3;
+    let questionCount = 0;
+    let currentAnswer = null;
+    let acceptingAnswer = false; // 중복 클릭 방지
+    const MAX_QUESTIONS_FOR_PROGRESS = 20; // 진행도 바 기준
+
+    // ---- 4. 유틸 함수 ----
+    function shuffle(array) {
+      const arr = [...array];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function updateStatusBar() {
+      scoreEl.textContent = score;
+      livesEl.textContent = lives;
+      questionCountEl.textContent = questionCount;
+      const progress = Math.min(questionCount / MAX_QUESTIONS_FOR_PROGRESS, 1);
+      progressFillEl.style.width = (progress * 100).toFixed(0) + "%";
+    }
+
+    function resetChoiceStyles() {
+      const buttons = choicesEl.querySelectorAll(".choice-btn");
+      buttons.forEach((btn) => {
+        btn.classList.remove("correct", "wrong");
+        btn.disabled = false;
+      });
+    }
+
+    function showGameOver() {
+      gameOverEl.style.display = "block";
+      finalScoreTextEl.textContent = `최종 점수: ${score}점 / 총 문제 ${questionCount}개`;
+      koreanMeaningEl.textContent = "게임이 끝났어요!";
+      hintTextEl.textContent = "";
+      choicesEl.innerHTML = "";
+      nextBtnText.textContent = "다시 시작";
+      acceptingAnswer = false;
+    }
+
+    // ---- 5. 새 문제 생성 ----
+    function generateQuestion() {
+      // 라이프가 0이면 게임 종료
+      if (lives <= 0) {
+        showGameOver();
+        return;
+      }
+
+      gameOverEl.style.display = "none";
+      messageEl.textContent = "";
+      messageEl.className = "message";
+
+      resetChoiceStyles();
+      choicesEl.innerHTML = "";
+
+      // 정답 단어 하나 뽑기
+      const correctWord = WORDS[Math.floor(Math.random() * WORDS.length)];
+      currentAnswer = correctWord.en;
+
+      koreanMeaningEl.textContent = correctWord.ko;
+      hintTextEl.textContent = correctWord.hint ? `힌트: ${correctWord.hint}` : "";
+
+      // 보기용 단어 3개 추가로 뽑기 (겹치지 않게)
+      const wrongCandidates = WORDS.filter(w => w.en !== correctWord.en);
+      const shuffledWrong = shuffle(wrongCandidates).slice(0, 3);
+
+      const options = shuffle([correctWord, ...shuffledWrong]);
+
+      options.forEach((word) => {
+        const btn = document.createElement("button");
+        btn.className = "choice-btn";
+        btn.textContent = word.en;
+        btn.addEventListener("click", () => handleChoice(word.en, btn));
+        choicesEl.appendChild(btn);
+      });
+
+      questionCount++;
+      updateStatusBar();
+      nextBtn.disabled = true;
+      nextBtnText.textContent = "정답 선택";
+      acceptingAnswer = true;
+    }
+
+    // ---- 6. 사용자가 선택했을 때 ----
+    function handleChoice(selected, buttonEl) {
+      if (!acceptingAnswer) return;
+      acceptingAnswer = false;
+
+      const buttons = choicesEl.querySelectorAll(".choice-btn");
+      buttons.forEach((btn) => (btn.disabled = true));
+
+      if (selected === currentAnswer) {
+        // 정답
+        score++;
+        messageEl.textContent = "정답! 잘했어요 👏";
+        messageEl.className = "message correct";
+        buttonEl.classList.add("correct");
+      } else {
+        // 오답
+        lives--;
+        messageEl.textContent = `아쉬워요. 정답은 "${currentAnswer}" 입니다.`;
+        messageEl.className = "message wrong";
+        buttonEl.classList.add("wrong");
+
+        // 정답 버튼도 표시
+        buttons.forEach((btn) => {
+          if (btn.textContent === currentAnswer) {
+            btn.classList.add("correct");
+          }
+        });
+      }
+
+      updateStatusBar();
+
+      if (lives <= 0) {
+        // 조금 기다렸다가 게임오버 표시
+        setTimeout(showGameOver, 600);
+      }
+
+      nextBtn.disabled = false;
+      nextBtnText.textContent = "다음 문제";
+    }
+
+    // ---- 7. 시작/다음 버튼 ----
+    nextBtn.addEventListener("click", () => {
+      if (lives <= 0 && questionCount > 0) {
+        // 게임 다시 시작
+        score = 0;
+        lives = 3;
+        questionCount = 0;
+        updateStatusBar();
+      }
+      generateQuestion();
+    });
+
+    // 초기 상태 표시
+    updateStatusBar();
+  </script>
+</body>
+</html>
